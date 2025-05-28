@@ -4,16 +4,13 @@ import { useState, useRef, useEffect } from "react";
 import "./App.css";
 
 import Map from "./Map";
-
-import { getLineByCode } from "./api/oasa_requests";
+import Overlay from "./Overlay";
 
 function App() {
   return (
-    <div style={{width:'100vw', height:'100vh'}}>
+    <div style={{ width: "100vw", height: "100vh" }}>
       <Map />
-      <div style={{position:'absolute', width:'280px', height:'400px', background:'#ffffff', right:20, bottom: 20, opacity:0.90}}>
-        <button onClick={() => getLineByCode(608)}>Get lines</button>
-      </div>
+      <Overlay />
     </div>
   );
 }

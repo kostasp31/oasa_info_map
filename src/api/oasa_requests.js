@@ -11,9 +11,9 @@ const getLineByCode = async (code) => {
   }
 
   if (response?.data) {
-    console.log(response.data)
-    const lineData = response.data.filter(itm => itm.LineID === "608" );
-    console.log(lineData);
+    const lineData = response.data.filter(itm => itm.LineID === code );
+    // console.log(lineData);
+    return lineData;
   }
 
   return response;

@@ -15,6 +15,7 @@ import bbox from "@turf/bbox";
 
 import axios from "axios";
 import CircleIcon from "@mui/icons-material/Circle";
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
 const Overlay = ({ mapRef }) => {
   const [lineNum, setLineNum] = useState("");
@@ -44,14 +45,13 @@ const Overlay = ({ mapRef }) => {
     queryFn: getLineByCode,
   });
 
-  const getLines = async (e = null) => {
+  const getLines = async (e = null, lineNumber = null) => {
     if (e)
       e.preventDefault();
-    console.log(latinToGreek(lineNum));
 
-    if (lineNum) {
+    if (lineNum || lineNumber) {
       // const res = await getLineByCode(lineNum);
-      const res = data.filter((itm) => itm.LineID === latinToGreek(lineNum));
+      const res = data.filter((itm) => itm.LineID === latinToGreek(lineNumber || lineNum));
 
       if (res && res.length) {
         setLines(res);
@@ -67,9 +67,6 @@ const Overlay = ({ mapRef }) => {
 
   const getLocations = async (e) => {
     e.preventDefault();
-
-    // console.log(routes);
-    // console.log(routeData);
 
     const loc = await getLineLocations(routeData.RouteCode);
     setLocations(loc.data);
@@ -106,7 +103,6 @@ const Overlay = ({ mapRef }) => {
       _routes = await getLineRoutes(alternativeVal);
     else _routes = await getLineRoutes(lineData?.LineCode);
 
-    console.log(_routes);
     setRoutes(_routes.data);
     setRouteInfo(_routes.data[0].RouteDescr);
     setRouteData(_routes.data[0]);
@@ -136,7 +132,6 @@ const Overlay = ({ mapRef }) => {
         .setPopup(popup)
         .addTo(mapRef.current);
 
-      console.log(stop)
       polygon.push([Number(stop.StopLng), Number(stop.StopLat)]);
 
       newMarkers.push(marker);
@@ -282,7 +277,6 @@ const Overlay = ({ mapRef }) => {
     for (let i = 0; i < markers.length; i++) markers[i].remove();
   }
 
-
   const goToCoords = (coords) => {
     const polygon = {
       type: 'Feature',
@@ -291,8 +285,6 @@ const Overlay = ({ mapRef }) => {
         coordinates: coords
       }
     };
-    console.log(polygon)
-    console.log(bbox(polygon))
     mapRef.current.fitBounds(bbox(polygon), {
       padding: 100
     });
@@ -318,6 +310,36 @@ const Overlay = ({ mapRef }) => {
         <div style={{ marginTop: '-15px', marginBottom: '-5px', textAlign: 'center' }}>Options</div>
         <hr />
         <form onSubmit={getLines}>
+          Select bus
+          <div className="custom-select">
+            <select
+              value={lineNum}
+              onChange={(e) => {
+                setRouteInfo("");
+                setRouteData({});
+                setRoutes([]);
+                setLineInfo("");
+                setLineData({});
+                setLines([]);
+                setError("");
+                setLineNum(e.target.value);
+                getLines(null, e.target.value);
+              }}
+              label="Bus number"
+              style={{ border: error ? '1px solid rgb(255, 83, 83)' : '' }}
+            >
+              {
+                data.map((line) => {
+                  return (
+                    <option value={line.LineID}>
+                      {line.LineID} {line.LineDescr}
+                    </option>
+                  )
+                })
+              }
+            </select>
+          </div>
+          {/* Or type the line id (e.g 608)
           <div className="custom-input">
             <input
               value={lineNum}
@@ -334,77 +356,100 @@ const Overlay = ({ mapRef }) => {
               label="Bus number"
               style={{ border: error ? '1px solid rgb(255, 83, 83)' : '' }}
             />
-          </div>
-          <button className="button-9" type="submit">Get lines</button>
-          <br />
-          Select line
-          {lines && lines.length ? (
-            <div class="custom-select">
-              <select
-                value={lineInfo}
-                onChange={(e) => {
-                  setLineInfo(e.target.value);
-                  let newLine = lines.filter(
-                    (elem) => elem.LineDescr === e.target.value
-                  )[0];
-                  setLineData(newLine);
-                  setRouteInfo("");
-                  setRouteData({});
-                  setRoutes([]);
-                  setError("");
+          </div> */}
 
-                  getRoutes(newLine.LineCode);
-                }}
-                style={{ width: "100%" }}
-              >
-                {lines.map((itm) => {
-                  return (
-                    <option key={itm.LineDescr} value={itm.LineDescr}>
-                      {itm.LineDescr}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          ) : null}
+          {/* <button className="button-9" type="submit">Get lines</button>
+          <br /> */}
+
         </form>
-        {/* <div>LineCode: {lineData?.LineCode}</div> */}
-        {/* <button className="button-9" onClick={getRoutes}>Get routes</button> */}
-        Select direction
-        {loadingRoutes ? (
-          <img width={100} height={100} src="src/assets/ripples.svg" style={{ left: '50%', width: '100%' }} />
-        ) : routes && routes.length ? (
-          <div class="custom-select">
-            <select
-              value={routeInfo}
-              onChange={(e) => {
-                setError("");
-                setRouteInfo(e.target.value);
-                setRouteData(
-                  routes.filter((elem) => elem.RouteDescr === e.target.value)[0]
-                );
-              }}
-              style={{ width: "100%" }}
-            >
-              {routes.map((itm) => {
-                return (
-                  <option key={itm.RouteDescr} value={itm.RouteDescr}>
-                    {itm.RouteDescr}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-        ) : null}
-        {!loadingRoutes && (
+
+        {lines.length ?
           <>
-            <button className="button-9" onClick={getLocations}>Get locations</button>
-            <button className="button-9" onClick={getStops}>Get stops</button>
+            Select line
+            <br />
+            {lines && lines.length ? (
+              <div className="custom-select">
+                <select
+                  value={lineInfo}
+                  onChange={(e) => {
+                    setLineInfo(e.target.value);
+                    let newLine = lines.filter(
+                      (elem) => elem.LineDescr === e.target.value
+                    )[0];
+                    setLineData(newLine);
+                    setRouteInfo("");
+                    setRouteData({});
+                    setRoutes([]);
+                    setError("");
+
+                    getRoutes(newLine.LineCode);
+                  }}
+                  style={{ width: "100%" }}
+                >
+                  {lines.map((itm) => {
+                    return (
+                      <option key={itm.LineDescr} value={itm.LineDescr}>
+                        {itm.LineDescr}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            ) : null}
+
+            Select direction
+            {loadingRoutes ? (
+              <img width={100} height={100} src="src/assets/ripples.svg" style={{ left: '50%', width: '100%' }} />
+            ) : routes && routes.length ? (
+              <div className="custom-select">
+                <select
+                  value={routeInfo}
+                  onChange={(e) => {
+                    setError("");
+                    setRouteInfo(e.target.value);
+                    setRouteData(
+                      routes.filter((elem) => elem.RouteDescr === e.target.value)[0]
+                    );
+                  }}
+                  style={{ width: "100%" }}
+                >
+                  {routes.map((itm) => {
+                    return (
+                      <option key={itm.RouteDescr} value={itm.RouteDescr}>
+                        {itm.RouteDescr}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            ) : null}
+            {!loadingRoutes && (
+              <>
+                <button className="button-9" onClick={getLocations} style={{ marginBottom: '-10px' }}>Get locations</button>
+                <button className="button-9" onClick={getStops}>Get stops</button>
+              </>
+            )}
+            {error && <div>{error}</div>}
           </>
-        )}
-        {error && <div>{error}</div>}
+          : null
+        }
       </div>
-      <button className="button-9" style={{ position: 'absolute', left: '30px', top: '30px', width: '50px', height: '50px', zIndex: 10, borderRadius: '100px', textAlign:'center' }} onClick={clearMap}>C</button>
+      <div style={{
+        position: "absolute",
+        width: "280px",
+        minHeight: '400px',
+        background: "#ffffff",
+        borderRadius: "10px",
+        right: 10,
+        bottom: 50,
+        opacity: 0.90,
+        padding: "30px 15px"
+      }}>
+
+      </div>
+      <button className="button" style={{ position: 'absolute', left: '30px', top: '30px', zIndex: 10, borderRadius: '100px', width: 'fit-content' }} onClick={clearMap}>
+        {<DeleteOutlineIcon width='100px' hwight='100px' />}
+      </button>
     </div>
   );
 };

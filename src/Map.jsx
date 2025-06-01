@@ -3,9 +3,8 @@ import mapboxgl from 'mapbox-gl';
 
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-const Map = () => {
+const Map = ({mapRef}) => {
   const mapContainerRef = useRef();
-  const mapRef = useRef();
 
   useEffect(() => {
     mapboxgl.accessToken = import.meta.env.VITE_APP_MAPBOX_ACCESS_TOKEN
